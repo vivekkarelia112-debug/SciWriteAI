@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SciWrite AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #f8fafc; color: #1e293b; font-family: 'Inter', sans-serif; }
+        h1, .serif-font { font-family: 'Playfair Display', serif; }
+        .card { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.75rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); }
+        .input-light { background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0.6rem 0.75rem; color: #0f172a; width: 100%; outline: none; transition: all 0.2s; font-size: 0.875rem;}
+        .input-light:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 600; margin-bottom: 0.35rem; display: block; }
+        .btn-primary { background: linear-gradient(135deg, #2563eb, #4f46e5); color: white; padding: 0.75rem 2rem; border-radius: 0.5rem; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2); transition: transform 0.1s, opacity 0.2s; }
+        .btn-primary:hover { opacity: 0.95; transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-secondary { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 0.4rem 0.75rem; border-radius: 0.375rem; font-size: 0.8rem; font-weight: 500; transition: all 0.1s;}
+        .btn-secondary:hover { background-color: #e2e8f0; color: #0f172a;}
+        .section-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem; }
+        .icon-box { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem;}
+    </style>
+</head>
+<body class="p-4 md:p-8 max-w-6xl mx-auto">
+
+    <div class="mb-10 text-center pt-6">
+        <div class="text-xs font-bold tracking-[0.2em] text-blue-600 uppercase mb-2">Academic Typesetting Agent</div>
+        <h1 class="text-5xl font-bold text-slate-900 mb-3 tracking-tight">SciWrite AI</h1>
+        <p class="text-slate-500 max-w-2xl mx-auto leading-relaxed">Transform research notes into full-length, publication-ready LaTeX papers. Set your metadata, provide context, and compile directly to an Overleaf-ready ZIP.</p>
+    </div>
+
+    <form id="paperForm" class="space-y-6">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div class="card p-6 lg:col-span-1 space-y-5">
+                <div>
+                    <label>Gemini API Key</label>
+                    <input type="password" id="api_key" class="input-light" placeholder="AIzaSy..." required>
+                </div>
+                <div>
+                    <label>Target Venue</label>
+                    <select id="venue" class="input-light">
+                        <option>NeurIPS</option><option>ICML</option><option>ICLR</option>
+                        <option>CVPR</option><option>Nature</option><option>Science</option>
+                        <option>IEEE Transactions</option><option selected>Custom / Unspecified</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label>Length By</label>
+                        <select id="length_mode" class="input-light" onchange="updateLengthLabel()">
+                            <option value="pages" selected>Pages</option>
+                            <option value="words">Words</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label id="length_label">Target Pages</label>
+                        <input type="number" id="length_val" class="input-light" value="8" min="2">
+                    </div>
+                </div>
+                <div>
+                    <label>Layout</label>
+                    <div class="flex gap-4 mt-1">
+                        <label class="flex items-center gap-2 cursor-pointer text-slate-700 capitalize normal-case text-sm font-normal"><input type="radio" name="layout" value="single" checked> Single Col</label>
+                        <label class="flex items-center gap-2 cursor-pointer text-slate-700 capitalize normal-case text-sm font-normal"><input type="radio" name="layout" value="double"> Double Col</label>
+                    </div>
+                </div>
+                <div>
+                    <label>Upload Figures</label>
+                    <input type="file" id="figures" class="input-light text-xs" multiple accept=".png,.jpg,.jpeg">
+                </div>
+            </div>
+
+            <div class="card p-6 lg:col-span-3">
+                <div class="section-header">
+                    <div class="icon-box bg-blue-50 text-blue-600">📄</div>
+                    <div><h2 class="text-lg font-semibold text-slate-800">Document Metadata</h2></div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+                    <div class="md:col-span-2">
+                        <label>Paper Title</label>
+                        <input type="text" id="title" class="input-light" value="Deep Multimodal Fusion for Robust Temporal Sequence Modelling in Noisy Environments" required>
+                    </div>
+                    <div>
+                        <label>Keywords</label>
+                        <input type="text" id="keywords" class="input-light" value="multimodal learning, attention mechanisms">
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center mb-3">
+                    <label style="margin:0;">Authors & Affiliations</label>
+                    <button type="button" onclick="addAuthorRow()" class="btn-secondary">+ Add Author</button>
+                </div>
+                
+                <div class="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden">
+                    <table class="w-full text-left text-sm" id="authorsTable">
+                        <thead class="bg-slate-100 text-slate-600 text-xs uppercase font-semibold">
+                            <tr>
+                                <th class="px-4 py-2">Name</th>
+                                <th class="px-4 py-2">Affiliation</th>
+                                <th class="px-4 py-2">Email</th>
+                                <th class="px-4 py-2 w-10"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="authorsBody" class="divide-y divide-slate-200">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-6">
+            <div class="section-header">
+                <div class="icon-box bg-emerald-50 text-emerald-600">🔬</div>
+                <div><h2 class="text-lg font-semibold text-slate-800">Research Context</h2>
+                <p class="text-xs text-slate-500 font-normal">Provide bullet points or raw notes. The AI will expand these into academic prose.</p></div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                <div>
+                    <label>Abstract & Goals</label>
+                    <textarea id="note_abstract" class="input-light h-28" placeholder="* Novel architecture...&#10;* SOTA results on dataset X..."></textarea>
+                </div>
+                <div>
+                    <label>Introduction & Background</label>
+                    <textarea id="note_intro" class="input-light h-28" placeholder="* Existing methods fail when...&#10;* Multimodal learning has grown..."></textarea>
+                </div>
+                <div>
+                    <label>Methodology</label>
+                    <textarea id="note_method" class="input-light h-32" placeholder="* Dual-stream encoder (ViT + BERT)...&#10;* AdamW, lr=3e-4, 100 epochs..."></textarea>
+                </div>
+                <div>
+                    <label>Results & Data</label>
+                    <textarea id="note_results" class="input-light h-32" placeholder="* Ours 89.4% vs Baseline 85.2%...&#10;* Ablation study shows..."></textarea>
+                </div>
+            </div>
+            <div>
+                <label>Additional Instructions</label>
+                <input type="text" id="note_extra" class="input-light" placeholder="e.g. Emphasize efficiency, reference specific datasets, keep a strict formal tone.">
+            </div>
+        </div>
+
+        <div class="card p-6">
+            <div class="section-header">
+                <div class="icon-box bg-pink-50 text-pink-600">📚</div>
+                <div><h2 class="text-lg font-semibold text-slate-800">Custom Bibliography (Optional)</h2></div>
+            </div>
+            <textarea id="bibtex" class="input-light h-32 font-mono text-xs" placeholder="@article{key,&#10;  title={Title},&#10;  author={Author},&#10;  year={2024}&#10;}"></textarea>
+            <p class="text-xs text-slate-500 mt-2">Paste raw BibTeX. The AI will automatically extract keys to generate inline \cite{} references. If left blank, real literature will be pulled from arXiv.</p>
+        </div>
+
+        <div class="flex flex-col items-center justify-center pt-4 pb-12">
+            <button type="submit" id="generateBtn" class="btn-primary w-full md:w-auto text-lg px-8 py-3">
+                ✨ Generate & Compile Full Paper
+            </button>
+            <div id="statusContainer" class="hidden mt-4 text-center">
+                <p id="statusText" class="text-sm font-semibold text-blue-600 animate-pulse">Initializing pipeline... this will take ~30-60 seconds.</p>
+                <p class="text-xs text-slate-500 mt-1">Fetching literature -> Generating sections -> Compiling LaTeX -> Packaging ZIP</p>
+            </div>
+        </div>
+    </form>
+
+    <script>
+        // Dynamic Authors Logic
+        let authorCount = 0;
+        function addAuthorRow(name='', affil='', email='') {
+            const tbody = document.getElementById('authorsBody');
+            const tr = document.createElement('tr');
+            tr.className = "author-row";
+            tr.innerHTML = `
+                <td class="px-2 py-2"><input type="text" class="input-light a-name" value="${name}" placeholder="Alice Researcher"></td>
+                <td class="px-2 py-2"><input type="text" class="input-light a-affil" value="${affil}" placeholder="MIT CSAIL"></td>
+                <td class="px-2 py-2"><input type="text" class="input-light a-email" value="${email}" placeholder="alice@mit.edu"></td>
+                <td class="px-2 py-2 text-center"><button type="button" class="text-red-500 hover:text-red-700 font-bold" onclick="this.closest('tr').remove()">×</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        // Initialize with default authors
+        addAuthorRow("Alice J. Researcher", "MIT CSAIL, Cambridge, MA", "aresearch@mit.edu");
+        addAuthorRow("Bob K. Scholar", "Stanford NLP Group", "bscholar@stanford.edu");
+
+        // UI Label Switcher
+        function updateLengthLabel() {
+            const mode = document.getElementById('length_mode').value;
+            const label = document.getElementById('length_label');
+            const input = document.getElementById('length_val');
+            if (mode === 'pages') {
+                label.innerText = 'Target Pages';
+                input.value = 8;
+            } else {
+                label.innerText = 'Target Words';
+                input.value = 4500;
+            }
+        }
+
+        // Form Submission via FormData (to support files)
+        document.getElementById('paperForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('generateBtn');
+            const status = document.getElementById('statusContainer');
+            
+            btn.disabled = true;
+            btn.innerText = "Processing Document...";
+            status.classList.remove('hidden');
+
+            // Gather Authors
+            const authorsList = [];
+            document.querySelectorAll('.author-row').forEach(row => {
+                authorsList.push({
+                    name: row.querySelector('.a-name').value.trim(),
+                    affil: row.querySelector('.a-affil').value.trim(),
+                    email: row.querySelector('.a-email').value.trim()
+                });
+            });
+
+            // Gather Notes
+            const notesObj = {
+                abstract: document.getElementById('note_abstract').value,
+                intro: document.getElementById('note_intro').value,
+                method: document.getElementById('note_method').value,
+                results: document.getElementById('note_results').value,
+                extra: document.getElementById('note_extra').value
+            };
+
+            // Build FormData
+            const fd = new FormData();
+            fd.append('api_key', document.getElementById('api_key').value);
+            fd.append('title', document.getElementById('title').value);
+            fd.append('keywords', document.getElementById('keywords').value);
+            fd.append('venue', document.getElementById('venue').value);
+            fd.append('layout', document.querySelector('input[name="layout"]:checked').value);
+            fd.append('length_mode', document.getElementById('length_mode').value);
+            fd.append('length_val', document.getElementById('length_val').value);
+            fd.append('bibtex', document.getElementById('bibtex').value);
+            
+            fd.append('authors', JSON.stringify(authorsList));
+            fd.append('notes', JSON.stringify(notesObj));
+
+            // Append Files
+            const fileInput = document.getElementById('figures');
+            for (let i = 0; i < fileInput.files.length; i++) {
+                fd.append('figures', fileInput.files[i]);
+            }
+
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    body: fd // Browser automatically sets multipart/form-data headers
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    alert("Error: " + (err.error || "Generation failed"));
+                } else {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'sciwrite_project.zip';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                }
+            } catch (error) {
+                alert("Network error: " + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "✨ Generate & Compile Full Paper";
+                status.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
